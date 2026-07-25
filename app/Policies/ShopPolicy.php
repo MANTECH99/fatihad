@@ -1,0 +1,24 @@
+<?php
+
+namespace App\Policies;
+
+use App\Models\Shop;
+use App\Models\User;
+
+class ShopPolicy
+{
+    public function view(User $user, Shop $shop)
+    {
+        return $user->id === $shop->user_id || $user->isAdmin();
+    }
+
+    public function update(User $user, Shop $shop)
+    {
+        return $user->id === $shop->user_id || $user->isAdmin();
+    }
+
+    public function delete(User $user, Shop $shop)
+    {
+        return $user->id === $shop->user_id || $user->isAdmin();
+    }
+}
