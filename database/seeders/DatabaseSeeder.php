@@ -7,7 +7,6 @@ use App\Models\Shop;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Setting;
-use App\Models\PaymentGateway;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -145,21 +144,6 @@ class DatabaseSeeder extends Seeder
         Setting::firstOrCreate(['key' => 'currency'], ['value' => 'XOF', 'group' => 'general']);
         Setting::firstOrCreate(['key' => 'timezone'], ['value' => 'Africa/Dakar', 'group' => 'general']);
 
-        // 7. Passerelle Dexchange (inactive par défaut)
-        PaymentGateway::firstOrCreate(
-            ['name' => 'dexchange'],
-            [
-                'display_name' => 'Dexchange API',
-                'description' => 'Passerelle de paiement mobile Wave et Orange Money',
-                'is_active' => false,
-                'is_test_mode' => true,
-                'config' => [
-                    'api_key' => '',
-                    'api_secret' => '',
-                    'test_endpoint' => '',
-                    'live_endpoint' => '',
-                ],
-            ]
-        );
+
     }
 }
