@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
 
-        Schema::create('certification', function (Blueprint $table) {
+        Schema::create('certifications', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('plan'); // trusted_seller, entrepreneur, company
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('certification');
+        Schema::dropIfExists('certifications');
     }
 };
