@@ -100,13 +100,13 @@
             {{-- BOUTONS CONTACTER & PARTAGER (Vert Emeraude de ton thème) --}}
             <div class="hidden md:flex justify-center gap-3 md:mt-4 md:mb-6 w-full max-w-md mx-auto">
                 {{-- Bouton Contacter (Fond Vert, Texte Blanc) --}}
-                <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $shop->whatsapp_phone) }}" target="_blank" class="flex-1 flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-4 rounded-lg transition shadow-sm">
+                <a href="https://wa.me/221772607977" target="_blank" class="flex-1 flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-4 rounded-lg transition shadow-sm">
                     <i class="fas fa-comment-alt text-lg"></i>
                     Contacter
                 </a>
 
                 {{-- Bouton Partager (Bordure Verte, Texte Vert) --}}
-                <button onclick="if (navigator.share) { navigator.share({ title: '{{ $shop->name }}', text: 'Découvrez {{ $shop->name }} !', url: window.location.href }); } else { alert('Copiez le lien : ' + window.location.href); }" class="flex-1 flex items-center justify-center gap-2 bg-transparent border-2 border-emerald-500 text-emerald-500 hover:bg-emerald-500 hover:text-white font-bold py-3 px-4 rounded-lg transition shadow-sm">
+                <button onclick="if (navigator.share) { navigator.share({ title: 'FatiHad Marketplace', text: 'Découvrez FatiHad Marketplace !', url: window.location.href }); } else { alert('Copiez le lien : ' + window.location.href); }" class="flex-1 flex items-center justify-center gap-2 bg-transparent border-2 border-emerald-500 text-emerald-500 hover:bg-emerald-500 hover:text-white font-bold py-3 px-4 rounded-lg transition shadow-sm">
                     <i class="fas fa-share-alt text-lg"></i>
                     Partager
                 </button>
