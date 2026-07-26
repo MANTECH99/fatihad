@@ -213,7 +213,7 @@
 
 <!-- Padding en bas -->
 <div class="lg:hidden h-16"></div>
-<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
 <script>
     lucide.createIcons();
 </script>
