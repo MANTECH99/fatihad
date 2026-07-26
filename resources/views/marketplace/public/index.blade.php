@@ -269,7 +269,7 @@
         <!-- Mobile Header -->
         <div class="px-4 mb-6">
             <div class="rounded-lg overflow-hidden shadow-sm" style="position: relative;">
-                <img src="{{ asset('images/hero-banner-mobiles.png') }}" alt="Seneshop Marketplace" class="w-full h-48 object-cover">
+                <img src="{{ asset('images/hero-banner-mobiless.png') }}" alt="Seneshop Marketplace" class="w-full h-48 object-cover">
             </div>
         </div>
 
