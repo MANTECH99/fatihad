@@ -186,6 +186,12 @@
                         @endif
                     </a>
 
+                    <a href="{{ route('merchant.facebook.stats', $shop) }}"
+                       class="flex items-center h-11 px-3 rounded-xl transition {{ request()->routeIs('merchant.facebook.stats') ? 'bg-emerald-50 text-emerald-700' : 'text-gray-600 hover:bg-gray-100' }}">
+                        <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+                        <span class="ml-3 text-[15px]">Stats Facebook</span>
+                    </a>
+
                     {{-- ➡️ AJOUTER ICI --}}
                     <a href="{{ route('merchant.paiements.shop', $shop) }}"
                        class="flex items-center h-11 px-3 rounded-xl transition {{ request()->routeIs('merchant.paiements.*') && request()->route('shop')?->id == $shop->id ? 'bg-emerald-50 text-emerald-700' : 'text-gray-600 hover:bg-gray-100' }}">

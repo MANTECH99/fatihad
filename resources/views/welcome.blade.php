@@ -169,10 +169,16 @@
 
             <!-- Desktop CTA -->
             <div class="hidden lg:flex items-center gap-4">
-                <a href="{{ route('login') }}" class="font-medium transition-colors duration-300 text-gray-700 hover:text-primary">Connexion</a>
-                <a href="{{ route('register') }}" class="bg-primary text-white font-semibold px-6 py-2.5 rounded-full hover:shadow-lg transition-all duration-300 transform hover:scale-105 whitespace-nowrap">
-                    Essai gratuit
-                </a>
+                @auth
+                    <a href="{{ route('merchant.dashboard') }}" class="bg-primary text-white font-semibold px-6 py-2.5 rounded-full hover:shadow-lg transition-all duration-300 transform hover:scale-105 whitespace-nowrap">
+                        Dashboard
+                    </a>
+                @else
+                    <a href="{{ route('login') }}" class="font-medium transition-colors duration-300 text-gray-700 hover:text-primary">Connexion</a>
+                    <a href="{{ route('register') }}" class="bg-primary text-white font-semibold px-6 py-2.5 rounded-full hover:shadow-lg transition-all duration-300 transform hover:scale-105 whitespace-nowrap">
+                        Essai gratuit
+                    </a>
+                @endauth
             </div>
 
             <!-- Mobile Hamburger -->
@@ -203,12 +209,18 @@
             <a href="#contact" @click="mobileOpen = false" class="text-gray-700 hover:text-primary transition-colors w-full text-center py-3">Contact</a>
 
             <div class="flex flex-col gap-3 w-64 mt-8">
-                <a href="{{ route('login') }}" class="text-center border-2 border-primary text-primary font-semibold py-3 rounded-full hover:bg-primary hover:text-white transition-colors">
-                    Connexion
-                </a>
-                <a href="{{ route('register') }}" class="text-center bg-primary text-white font-semibold py-3 rounded-full hover:bg-emerald-600 transition-colors">
-                    Essai gratuit
-                </a>
+                @auth
+                    <a href="{{ route('merchant.dashboard') }}" class="text-center bg-primary text-white font-semibold py-3 rounded-full hover:bg-emerald-600 transition-colors">
+                        Dashboard
+                    </a>
+                @else
+                    <a href="{{ route('login') }}" class="text-center border-2 border-primary text-primary font-semibold py-3 rounded-full hover:bg-primary hover:text-white transition-colors">
+                        Connexion
+                    </a>
+                    <a href="{{ route('register') }}" class="text-center bg-primary text-white font-semibold py-3 rounded-full hover:bg-emerald-600 transition-colors">
+                        Essai gratuit
+                    </a>
+                @endauth
             </div>
         </div>
     </div>

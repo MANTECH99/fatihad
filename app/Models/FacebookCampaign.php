@@ -39,6 +39,9 @@ class FacebookCampaign extends Model
         'landing_url',
         'post_message',
         'post_image',
+        'whatsapp_number',
+        'whatsapp_message',
+        'whatsapp_image',
     ];
 
     protected $casts = [

@@ -127,4 +127,30 @@ class FacebookController extends Controller
 
         return redirect()->back()->with('success', 'Page Facebook déconnectée.');
     }
+
+    public function stats(Shop $shop)
+    {
+        $this->authorize('view', $shop);
+
+        if (!$shop->hasFacebookConnected()) {
+            return redirect()->back()->with('error', 'Page Facebook non connectée.');
+        }
+
+        $fbService = new \App\Services\FacebookService(
+            $shop->facebook_access_token,
+            $shop->facebook_page_id
+        );
+
+        $pageStats = $fbService->getPageStats($shop->facebook_page_id);
+
+        $products = $shop->products()
+            ->whereNotNull('facebook_post_id')
+            ->get()
+            ->map(function ($product) use ($fbService) {
+                $product->fb_stats = $fbService->getPostEngagement($product->facebook_post_id);
+                return $product;
+            });
+
+        return view('merchant.facebook.stats', compact('shop', 'pageStats', 'products'));
+    }
 }

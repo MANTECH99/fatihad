@@ -55,6 +55,10 @@
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 {{ $userPlan === 'free' ? 'blur-sm pointer-events-none select-none' : '' }}">
         <p class="text-sm text-gray-500">Gérez vos campagnes publicitaires</p>
         <div class="flex flex-wrap gap-2">
+            <a href="{{ route('merchant.boost.whatsapp.create', $shop) }}"
+               class="px-4 py-2 bg-green-500 text-white rounded-md text-sm hover:bg-green-600">
+                📱 Campagne WhatsApp
+            </a>
             <a href="{{ route('merchant.products.index', $shop) }}"
                class="px-3 md:px-4 py-2 bg-emerald-500 text-white rounded-md text-xs md:text-sm hover:bg-emerald-600 whitespace-nowrap">
                 🚀 Nouveau boost
@@ -77,9 +81,13 @@
                 <div class="flex flex-col sm:flex-row justify-between items-start gap-3">
                     <div class="flex items-center space-x-3 md:space-x-4">
                         @if($campaign->landing_url)
-                            <div class="w-12 h-12 md:w-16 md:h-16 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-                                <i class="fas fa-rocket text-white text-lg md:text-2xl"></i>
-                            </div>
+                            @if($campaign->post_image)
+                                <img src="{{ asset('storage/' . $campaign->post_image) }}" alt="" class="w-12 h-12 md:w-16 md:h-16 rounded-lg object-cover flex-shrink-0">
+                            @else
+                                <div class="w-12 h-12 md:w-16 md:h-16 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-rocket text-white text-lg md:text-2xl"></i>
+                                </div>
+                            @endif
                             <div>
                                 <h4 class="font-bold text-sm md:text-base">{{ $campaign->post_message ? \Str::limit($campaign->post_message, 50) : '📢 Promotion SaaS' }}</h4>
                                 <p class="text-xs md:text-sm text-gray-500">🔗 {{ \Str::limit($campaign->landing_url, 30) }}</p>
@@ -91,6 +99,19 @@
                             <div>
                                 <h4 class="font-bold text-sm md:text-base">🎯 Retargeting automatique</h4>
                                 <p class="text-xs md:text-sm text-gray-500">{{ $campaign->name }}</p>
+                            </div>
+
+                        @elseif($campaign->campaign_type === 'traffic' && $campaign->whatsapp_number)
+                            @if($campaign->whatsapp_image)
+                                <img src="{{ asset('storage/' . $campaign->whatsapp_image) }}" alt="" class="w-12 h-12 md:w-16 md:h-16 rounded-lg object-cover flex-shrink-0">
+                            @else
+                                <div class="w-12 h-12 md:w-16 md:h-16 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                                    <i class="fab fa-whatsapp text-green-600 text-lg md:text-2xl"></i>
+                                </div>
+                            @endif
+                            <div>
+                                <h4 class="font-bold text-sm md:text-base">📱 Campagne WhatsApp</h4>
+                                <p class="text-xs md:text-sm text-gray-500">{{ $campaign->whatsapp_message ? \Str::limit($campaign->whatsapp_message, 50) : $campaign->name }}</p>
                             </div>
                         @else
                             <img src="{{ $campaign->product->image_url }}" alt="" class="w-12 h-12 md:w-16 md:h-16 rounded-lg object-cover">

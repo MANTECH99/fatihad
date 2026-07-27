@@ -6,7 +6,7 @@
 @section('content')
     <div class="max-w-2xl mx-auto">
         <div class="bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg p-4 mb-6 text-white">
-            <h3 class="font-bold">🚀 Promotion Seneshop</h3>
+            <h3 class="font-bold">🚀 Promotion Boutique</h3>
             <p class="text-sm text-white/90 mt-1">
                 Créez une publication sponsorisée qui redirige vers votre landing page.
             </p>

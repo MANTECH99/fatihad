@@ -98,6 +98,8 @@ Route::middleware('auth')->group(function () {
 
     // Espace Commerçant
     Route::prefix('merchant')->name('merchant.')->middleware(['check.trial'])->group(function () {
+        Route::get('shops/{shop}/facebook-stats', [App\Http\Controllers\FacebookController::class, 'stats'])
+            ->name('facebook.stats');
         Route::get('shops/{shop}/abandoned-carts', [App\Http\Controllers\CartReminderController::class, 'index'])->name('carts.abandoned');
 
 
@@ -105,7 +107,8 @@ Route::middleware('auth')->group(function () {
         Route::get('shops/{shop}/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
         Route::get('shops/{shop}/customers', [CustomerController::class, 'index'])->name('customers.index');
 
-
+        Route::get('shops/{shop}/whatsapp/create', [BoostController::class, 'createWhatsAppForm'])->name('boost.whatsapp.create');
+        Route::post('shops/{shop}/whatsapp', [BoostController::class, 'createWhatsApp'])->name('boost.whatsapp');
         Route::get('shops/{shop}/promote', [BoostController::class, 'promoteSaas'])->name('boost.promote');
         Route::post('shops/{shop}/promote', [BoostController::class, 'storePromoteSaas'])->name('boost.promote.store');
 
@@ -316,7 +319,35 @@ Route::get('/conditions-generales', function () {
 })->name('conditions-generales');
 
 
+Route::get('/test-whatsapp', function () {
+    $shop = \App\Models\Shop::first(); // Plus simple, prend le premier shop
 
+    $campaign = \App\Models\FacebookCampaign::create([
+        'shop_id' => $shop->id,
+        'product_id' => $shop->products()->first()->id ?? 1,
+        'name' => 'Test WhatsApp ' . now()->format('H:i'),
+        'campaign_type' => 'traffic',
+        'daily_budget' => 1,
+        'total_budget' => 3,
+        'duration_days' => 3,
+        'whatsapp_number' => $shop->whatsapp_phone,
+        'whatsapp_message' => 'Bonjour, test !',
+        'status' => 'pending',
+        'ends_at' => now()->addDays(3),
+    ]);
+
+    try {
+        $adsService = new \App\Services\FacebookAdsService(
+            $shop->facebook_access_token,
+            'act_' . $shop->facebook_ad_account_id,
+            $shop->facebook_page_id
+        );
+        $result = $adsService->createWhatsAppCampaign($campaign);
+        dd($result);
+    } catch (\Exception $e) {
+        dd($e->getMessage());
+    }
+});
 
 
 require __DIR__.'/auth.php';

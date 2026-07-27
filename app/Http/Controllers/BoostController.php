@@ -379,6 +379,7 @@ class BoostController extends Controller
             'product_id' => $shop->products()->first()->id ?? 0,
             'landing_url' => $validated['landing_url'],
             'post_message' => $validated['message'],
+            'post_image' => $imagePath,  // ← AJOUTER dans le FacebookCampaign::create()
             'name' => 'Promo SaaS - ' . now()->format('d/m/Y H:i'),
             'campaign_type' => 'boost',
             'daily_budget' => $validated['daily_budget'],
@@ -411,5 +412,59 @@ class BoostController extends Controller
             \Log::error('Promote SaaS error: ' . $e->getMessage());
             return redirect()->back()->with('error', $e->getMessage());
         }
+    }
+
+    public function createWhatsApp(Request $request, Shop $shop)
+    {
+        $this->authorize('update', $shop);
+
+        $validated = $request->validate([
+            'message' => 'nullable|string|max:200',
+            'daily_budget' => 'required|numeric|min:1|max:1000',
+            'duration_days' => 'required|integer|min:1|max:30',
+            'whatsapp_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',  // ← AJOUTER
+        ]);
+
+        // ← AJOUTER ICI
+        $whatsappImage = null;
+        if ($request->hasFile('whatsapp_image')) {
+            $whatsappImage = $request->file('whatsapp_image')->store('whatsapp-campaigns', 'public');
+        }
+
+        $campaign = FacebookCampaign::create([
+            'shop_id' => $shop->id,
+            'product_id' => $shop->products()->first()->id ?? 0,
+            'name' => 'WhatsApp - ' . now()->format('d/m/Y H:i'),
+            'campaign_type' => 'traffic',
+            'daily_budget' => $validated['daily_budget'],
+            'total_budget' => $validated['daily_budget'] * $validated['duration_days'],
+            'duration_days' => (int) $validated['duration_days'],
+            'whatsapp_number' => $shop->whatsapp_phone,
+            'whatsapp_message' => $validated['message'] ?? 'Bonjour, je voudrais commander !',
+            'whatsapp_image' => $whatsappImage,  // ← AJOUTER
+            'status' => 'pending',
+            'ends_at' => now()->addDays((int) $validated['duration_days']),
+        ]);
+
+        try {
+            $adsService = new \App\Services\FacebookAdsService(
+                $shop->facebook_access_token,
+                'act_' . $shop->facebook_ad_account_id,
+                $shop->facebook_page_id
+            );
+            $adsService->createWhatsAppCampaign($campaign);
+
+            return redirect()->route('merchant.boost.index', $shop)
+                ->with('success', '📱 Campagne WhatsApp lancée !');
+        } catch (\Exception $e) {
+            $campaign->update(['status' => 'rejected']);
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function createWhatsAppForm(Shop $shop)
+    {
+        $this->authorize('update', $shop);
+        return view('merchant.boost.whatsapp', compact('shop'));
     }
 }

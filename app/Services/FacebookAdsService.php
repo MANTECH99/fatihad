@@ -410,4 +410,97 @@ class FacebookAdsService
 
         throw new \Exception('Impossible de créer le Product Set: ' . json_encode($data));
     }
+
+    public function createWhatsAppCampaign(FacebookCampaign $campaign)
+    {
+        $shop = $campaign->shop;
+        $whatsappNumber = $campaign->whatsapp_number ?? $shop->whatsapp_phone;
+        $message = $campaign->whatsapp_message ?? "Bonjour, je voudrais commander :";
+
+        // 1. Campagne
+        $fbCampaign = Http::post("https://graph.facebook.com/v18.0/{$this->adAccountId}/campaigns", [
+            'name' => $campaign->name,
+            'objective' => 'OUTCOME_TRAFFIC',
+            'status' => 'ACTIVE',
+            'special_ad_categories' => [],
+            'is_adset_budget_sharing_enabled' => false,  // ← AJOUTER
+            'access_token' => $this->accessToken,
+        ])->json();
+
+        if (!isset($fbCampaign['id'])) {
+            throw new \Exception('Échec création campagne: ' . json_encode($fbCampaign));
+        }
+        $campaign->update(['fb_campaign_id' => $fbCampaign['id']]);
+
+        // 2. AdSet
+        $fbAdSet = Http::post("https://graph.facebook.com/v18.0/{$this->adAccountId}/adsets", [
+            'name' => $campaign->name . ' - AdSet',
+            'campaign_id' => $campaign->fb_campaign_id,
+            'daily_budget' => intval($campaign->daily_budget * 100),
+            'bid_strategy' => 'LOWEST_COST_WITHOUT_CAP',
+            'billing_event' => 'IMPRESSIONS',
+            'optimization_goal' => 'REACH',
+            'is_adset_budget_sharing_enabled' => false,  // ← AJOUTER
+            'targeting' => json_encode([
+                'geo_locations' => ['countries' => ['SN']],
+                'age_min' => 18,
+                'age_max' => 65,
+            ]),
+            'start_time' => now()->toIso8601String(),
+            'end_time' => now()->addDays((int) $campaign->duration_days)->toIso8601String(),
+            'status' => 'ACTIVE',
+            'access_token' => $this->accessToken,
+        ])->json();
+
+        if (!isset($fbAdSet['id'])) {
+            throw new \Exception('Échec création AdSet: ' . json_encode($fbAdSet));
+        }
+        $campaign->update(['fb_adset_id' => $fbAdSet['id']]);
+
+// Uploader l'image d'abord
+        $imageHash = null;
+        if ($campaign->whatsapp_image) {
+            $imagePath = storage_path('app/public/' . $campaign->whatsapp_image);
+            $uploadResponse = Http::attach(
+                'source', file_get_contents($imagePath), basename($imagePath)
+            )->post("https://graph.facebook.com/v18.0/{$this->adAccountId}/adimages", [
+                'access_token' => $this->accessToken,
+            ])->json();
+
+            $imageHash = $uploadResponse['images'][basename($imagePath)]['hash'] ?? null;
+        }
+
+// Puis utiliser l'image hash dans la pub
+        $fbAd = Http::post("https://graph.facebook.com/v18.0/{$this->adAccountId}/ads", [
+            'name' => $campaign->name . ' - Pub',
+            'adset_id' => $campaign->fb_adset_id,
+            'creative' => json_encode([
+                'object_story_spec' => [
+                    'page_id' => $this->pageId,
+                    'link_data' => [
+                        'link' => "https://wa.me/" . preg_replace('/[^0-9]/', '', $whatsappNumber) . "?text=" . urlencode($message),
+                        'message' => $message,
+                        'name' => 'Commander via WhatsApp',
+                        'description' => 'Échangez directement avec nous !',
+                        'image_hash' => $imageHash,
+                        'call_to_action' => ['type' => 'WHATSAPP_MESSAGE'],
+                    ],
+                ],
+            ]),
+            'status' => 'ACTIVE',
+            'access_token' => $this->accessToken,
+        ])->json();
+
+        if (!isset($fbAd['id'])) {
+            throw new \Exception('Échec création pub WhatsApp: ' . json_encode($fbAd));
+        }
+
+        $campaign->update([
+            'fb_ad_id' => $fbAd['id'],
+            'status' => 'active',
+            'starts_at' => now(),
+        ]);
+
+        return $campaign;
+    }
 }
