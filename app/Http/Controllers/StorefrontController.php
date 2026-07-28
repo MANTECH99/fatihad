@@ -105,7 +105,7 @@ class StorefrontController extends Controller
         $total = $subtotal + $shop->delivery_fee;
 
         // Estimation des frais si paiement mobile
-        $estimatedPaymentFee = (int) round(($subtotal + $shop->delivery_fee) * 0.0303);
+        $estimatedPaymentFee = (int) round(($subtotal + $shop->delivery_fee) * 0.03046);
 
         $deliveryZones = $shop->delivery_zones ?? []; // ← AJOUTER
 
@@ -150,7 +150,7 @@ class StorefrontController extends Controller
         // Frais de paiement mobile
         $paymentFee = 0;
         if (in_array($validated['payment_method'], ['wave', 'orange_money'])) {
-            $paymentFee = (int) round(($subtotal + $deliveryFee) * 0.0303); // ← $deliveryFee au lieu de $shop->delivery_fee
+            $paymentFee = (int) round(($subtotal + $deliveryFee) * 0.03046); // ← $deliveryFee au lieu de $shop->delivery_fee
         }
 
         $total = $subtotal + $deliveryFee + $paymentFee; // ← $deliveryFee au lieu de $shop->delivery_fee

@@ -23,6 +23,10 @@ class CertificationController extends Controller
     public function index()
     {
         $plans = PlanService::$certifications;
+        // Ajouter les frais pour chaque plan
+        foreach ($plans as $key => $plan) {
+            $plans[$key]['fee'] = (int) round($plan['price'] * 0.0303);
+        }
         $user = Auth::user();
 
         // Vérifier si l'utilisateur a déjà une certification active
@@ -64,7 +68,7 @@ class CertificationController extends Controller
         $amount = PlanService::$certifications[$planKey]['price'];
 
         // Frais Dexpay (~3%)
-        $paymentFee = (int) round($amount * 0.0303);
+        $paymentFee = (int) round($amount * 0.03046);
         $totalAmount = $amount + $paymentFee;
 
         $reference = 'CERT-' . Auth::id() . '-' . $planKey . '-' . time();
@@ -158,6 +162,28 @@ class CertificationController extends Controller
     {
         Log::info('Certification - Vérification statut', ['externalId' => $externalId]);
 
+        // 🔥 VÉRIFIER SI LE WEBHOOK A DÉJÀ TRAITÉ CETTE TRANSACTION
+        $alreadyProcessed = Certification::where('metadata->reference', $externalId)
+            ->orWhere('metadata->data->reference', $externalId)
+            ->where('status', 'active')
+            ->exists();
+
+        if ($alreadyProcessed) {
+            Log::info('Certification - Déjà traitée par webhook, on redirige', ['externalId' => $externalId]);
+
+            // Nettoyer la session
+            session()->forget([
+                'pending_cert_plan', 'pending_cert_amount', 'pending_cert_total',
+                'pending_cert_external_id', 'pending_cert_entity', 'pending_cert_shop_id'
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'status' => 'SUCCESS',
+                'redirect' => route('certification.status')
+            ]);
+        }
+
         $session = $this->dexpay->getCheckoutSession($externalId);
 
         if (!$session) {
@@ -194,13 +220,9 @@ class CertificationController extends Controller
                     ->first();
 
                 if ($existing) {
-                    Log::info('Certification - checkStatus ignoré car déjà active', ['user_id' => $userId, 'existing_id' => $existing->id]);
-                    session()->forget(['pending_cert_plan', 'pending_cert_amount', 'pending_cert_total', 'pending_cert_external_id', 'pending_cert_entity']);
-                    return response()->json([
-                        'success' => true,
-                        'status' => 'SUCCESS',
-                        'redirect' => route('certification.status')
-                    ]);
+                    // Annuler l'ancienne certification pour la remplacer
+                    $existing->update(['status' => 'cancelled']);
+                    Log::info('Certification - Ancienne certification annulée pour upgrade', ['old_id' => $existing->id, 'new_plan' => $planKey]);
                 }
 
 
@@ -217,7 +239,17 @@ class CertificationController extends Controller
                     'entity_name' => $entityName,
                     'status' => 'active',
                     'expires_at' => now()->addYear(),
-                    'metadata' => $session,
+                    'metadata' => array_merge($session, ['reference' => $externalId]), // ← AJOUTER LA RÉFÉRENCE ICI
+                ]);
+                // Ajouter le log de réception
+                CashoutLog::create([
+                    'shop_id'      => $shop->id,
+                    'service_code' => $session['data']['operator'] ?? 'sandbox',
+                    'phone'        => $user->phone ?? 'N/A',
+                    'amount' => session('pending_cert_total') ?? PlanService::$certifications[$planKey]['price'],
+                    'external_id'  => $externalId,
+                    'status'       => 'success',
+                    'response'     => json_encode($session),
                 ]);
 
                 Log::info('Certification activée via checkStatus', ['user_id' => $userId, 'plan' => $planKey]);
@@ -261,6 +293,16 @@ class CertificationController extends Controller
         Log::info('WEBHOOK ARRIVÉ !', ['headers' => $request->headers->all(), 'externalId' => $externalId]);
         Log::info('Certification Webhook reçu', $request->all());
 
+        // 🔥 AJOUTER CECI
+        $alreadyProcessed = Certification::where('metadata->reference', $externalId)
+            ->where('status', 'active')
+            ->exists();
+
+        if ($alreadyProcessed) {
+            Log::info('Certification - Déjà traitée par checkStatus, webhook ignoré', ['externalId' => $externalId]);
+            return response()->json(['success' => true]);
+        }
+
         $payload = $request->all();
         $event = $payload['event'] ?? ($payload['data']['status'] ?? null);
 
@@ -292,8 +334,9 @@ class CertificationController extends Controller
                         ->first();
 
                     if ($existing) {
-                        Log::info('Certification - Webhook ignoré car déjà active', ['user_id' => $user->id, 'existing_id' => $existing->id]);
-                        return response()->json(['success' => true]);
+                        // Annuler l'ancienne certification pour la remplacer
+                        $existing->update(['status' => 'cancelled']);
+                        Log::info('Certification - Ancienne certification annulée pour upgrade', ['old_id' => $existing->id, 'new_plan' => $planKey]);
                     }
 
                     // Si pas d'existante, on crée et on désactive les anciennes
@@ -318,7 +361,18 @@ class CertificationController extends Controller
                         'entity_name' => $entityName,
                         'status' => 'active',
                         'expires_at' => now()->addYear(),
-                        'metadata' => $payload,
+                        'metadata' => array_merge($payload, ['reference' => $externalId]), // ← AJOUTER LA RÉFÉRENCE ICI
+                    ]);
+
+                    // Ajouter le log de réception
+                    CashoutLog::create([
+                        'shop_id'      => $shop->id,
+                        'service_code' => $payload['operator'] ?? 'sandbox',
+                        'phone'        => $user->phone ?? 'N/A',
+                        'amount' => $payload['amount'] ?? PlanService::$certifications[$planKey]['price'],
+                        'external_id'  => $externalId,
+                        'status'       => 'success',
+                        'response'     => json_encode($payload),
                     ]);
 
                     // 🔥 LOG 2 : Vérifier si la création a réussi

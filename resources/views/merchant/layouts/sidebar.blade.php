@@ -203,6 +203,12 @@
                         @endif
                     </a>
 
+                    <a href="{{ route('merchant.cashout.index', $shop) }}"
+                       class="flex items-center h-11 px-3 rounded-xl transition {{ request()->routeIs('merchant.cashout.*') && request()->route('shop')?->id == $shop->id ? 'bg-emerald-50 text-emerald-700' : 'text-gray-600 hover:bg-gray-100' }}">
+                        <i data-lucide="wallet" class="w-5 h-5"></i>
+                        <span class="ml-3 text-[15px]">Mes retraits</span>
+                    </a>
+
                     <a href="{{ route('merchant.shops.edit',$shop) }}"
                        class="flex items-center h-11 px-3 rounded-xl transition {{ request()->routeIs('merchant.shops.edit') && request()->route('shop')?->id == $shop->id ? 'bg-emerald-50 text-emerald-700' : 'text-gray-600 hover:bg-gray-100' }}">
                         <i data-lucide="settings" class="w-5 h-5"></i>

@@ -125,12 +125,12 @@
         <div class="grid grid-cols-3 gap-4 mb-8">
             <div class="bg-white rounded-lg shadow p-4 text-center">
                 <p class="text-xs text-gray-500 mb-1">Envois</p>
-                <p class="text-xl font-bold" style="color: #4D1111">{{ $logs->whereIn('service_code', ['wave_sn_payout', 'orange_money_sn_payout', 'free_money_sn_payout'])->count() }}</p>
+                <p class="text-xl font-bold" style="color: #4D1111">{{ $allLogs->whereIn('service_code', ['wave_sn_payout', 'om_sn_payout'])->count() }}</p>
                 <p class="text-xs text-gray-400">Total</p>
             </div>
             <div class="bg-white rounded-lg shadow p-4 text-center">
                 <p class="text-xs text-gray-500 mb-1">Réceptions</p>
-                <p class="text-xl font-bold" style="color: #10B981">{{ $logs->whereIn('service_code', ['wave_sn', 'orange_money_sn', 'WAVE_SN_CASHOUT', 'OM_SN_CASHOUT'])->count() }}</p>
+                <p class="text-xl font-bold" style="color: #10B981">{{ $allLogs->whereIn('service_code', ['wave_sn', 'om_sn', 'sandbox', 'WAVE_SN_CASHOUT', 'OM_SN_CASHOUT'])->count() }}</p>
                 <p class="text-xs text-gray-400">Total</p>
             </div>
             <div class="bg-white rounded-lg shadow p-4 text-center">
@@ -257,10 +257,7 @@
                 </button>
             </div>
 
-            @php
-                $envois = $logs->whereIn('service_code', ['wave_sn_payout', 'orange_money_sn_payout', 'free_money_sn_payout']);
-                $receptions = $logs->whereIn('service_code', ['wave_sn', 'orange_money_sn', 'WAVE_SN_CASHOUT', 'OM_SN_CASHOUT', 'FM_SN_CASHOUT', 'WIZALL_SN_CASHOUT']);
-            @endphp
+
 
             {{-- Envois --}}
             <div id="tab-content-envois">
@@ -325,13 +322,17 @@
         const fraisDetail = document.getElementById('frais-detail');
         const balance = {{ $balance ?? 0 }};
 
+        const operatorFees = { 'wave_sn_payout': 0.015, 'om_sn_payout': 0.014, 'free_money_sn_payout': 0.015 };
+
         amountInput?.addEventListener('input', function() {
             const amount = parseFloat(this.value) || 0;
+            const operator = document.querySelector('select[name="operator"]')?.value || 'wave_sn_payout';
+            const feeRate = operatorFees[operator] || 0.015;
 
             if (amount >= 250) {
                 fraisDetail.classList.remove('hidden');
 
-                const frais = Math.round(amount * 0.015);
+                const frais = Math.round(amount * feeRate);
                 const total = amount + frais;
                 const soldeApres = balance - total;
 
@@ -347,6 +348,10 @@
             } else {
                 fraisDetail.classList.add('hidden');
             }
+        });
+
+        document.querySelector('select[name="operator"]')?.addEventListener('change', function() {
+            amountInput?.dispatchEvent(new Event('input'));
         });
 
         let balanceVisible = false;

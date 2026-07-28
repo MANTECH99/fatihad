@@ -348,7 +348,7 @@
             const deliveryFee = parseInt(document.getElementById('delivery-fee-amount').value) || 0;
             const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
             const isMobile = paymentMethod === 'wave' || paymentMethod === 'orange_money';
-            const paymentFee = isMobile ? Math.round((subtotal + deliveryFee) * 0.0303) : 0;
+            const paymentFee = isMobile ? Math.round((subtotal + deliveryFee) * 0.03046) : 0;
             const total = subtotal + deliveryFee + paymentFee;
 
             document.getElementById('total-display').textContent = new Intl.NumberFormat('fr-FR').format(total) + ' FCFA';

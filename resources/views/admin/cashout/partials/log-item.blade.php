@@ -1,5 +1,17 @@
 @php
-    $frais = $log->amount * 0.015;
+    $fraisWaveOM = 0.015; // 1.5% Wave et Orange Money
+    $fraisFree = 0.015;   // 1.5% Free Money
+
+    $operatorFees = [
+        'wave_sn_payout' => 0.015,
+        'om_sn_payout' => 0.014,     // 1.4% Orange Money retrait
+        'free_money_sn_payout' => 0.015,
+        'wave_sn' => 0.015,
+        'om_sn' => 0.015,
+        'sandbox' => 0.015,
+    ];
+
+    $frais = $log->amount * ($operatorFees[$log->service_code] ?? 0.015);
     $total = $isCashin ? $log->amount + $frais : $log->amount;
     $montantRecu = $isCashin ? $log->amount : $log->amount - $frais;
 @endphp

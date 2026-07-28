@@ -244,10 +244,10 @@
                     Mode, beauté, high-tech, maison, alimentation, artisanat, services…
                 </p>
                 <p class="text-gray-900 font-bold text-xl mb-6">
-                    Si c'est de qualité, ça a sa place sur Seneshop.
+                    Si c'est de qualité, ça a sa place sur FatiHad.
                 </p>
                 <p class="text-gray-500 leading-relaxed">
-                    Que vous soyez un petit commerçant, un artisan ou une marque établie, Seneshop vous donne les outils pour vendre en ligne simplement, sans investir dans un site web coûteux.
+                    Que vous soyez un petit commerçant, un artisan ou une marque établie, FatiHad vous donne les outils pour vendre en ligne simplement, sans investir dans un site web coûteux.
                 </p>
             </div>
         </div>

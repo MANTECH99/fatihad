@@ -40,7 +40,7 @@ class PlanService
     public static array $certifications = [
         'trusted_seller' => [
             'name' => 'Vendeur de Confiance',
-            'price' => 250,
+            'price' => 140000,
             'duration' => 'an',
             'features' => ['Badge de confiance visible']
         ],
@@ -86,7 +86,7 @@ class PlanService
         ],
         'marketplace_premium' => [
             'name' => 'Marketplace Premium',
-            'price' => 1000,
+            'price' => 140000,
             'duration' => 'mois',
             'max_products' => -1, // Illimité (-1)
             'features' => [

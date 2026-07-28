@@ -240,6 +240,7 @@ class PaymentController extends Controller
     public function success($orderNumber)
     {
         $order = Order::where('order_number', $orderNumber)->firstOrFail();
+        $shop = $order->shop;  // ← AJOUTER
 
         // Vérifier le statut réel auprès de Dexpay
         $metadata = $order->payment_metadata ?? [];
@@ -251,7 +252,7 @@ class PaymentController extends Controller
             $order->update(['payment_status' => 'paid']);
         }
 
-        return view('payment.success', compact('order'));
+        return view('payment.success', compact('order', 'shop'));  // ← AJOUTER $shop
     }
 
     /**
@@ -260,7 +261,8 @@ class PaymentController extends Controller
     public function failure($orderNumber)
     {
         $order = Order::where('order_number', $orderNumber)->firstOrFail();
-        return view('payment.failure', compact('order'));
+        $shop = $order->shop;
+        return view('payment.failure', compact('order', 'shop'));
     }
 
 

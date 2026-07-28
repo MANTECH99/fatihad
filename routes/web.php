@@ -98,6 +98,8 @@ Route::middleware('auth')->group(function () {
 
     // Espace Commerçant
     Route::prefix('merchant')->name('merchant.')->middleware(['check.trial'])->group(function () {
+        Route::get('shops/{shop}/cashout', [App\Http\Controllers\MerchantCashoutController::class, 'index'])
+            ->name('cashout.index');
         Route::get('shops/{shop}/facebook-stats', [App\Http\Controllers\FacebookController::class, 'stats'])
             ->name('facebook.stats');
         Route::get('shops/{shop}/abandoned-carts', [App\Http\Controllers\CartReminderController::class, 'index'])->name('carts.abandoned');

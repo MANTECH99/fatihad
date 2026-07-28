@@ -3,6 +3,7 @@
 @section('title', 'Obtenir une Certification')
 
 @section('content')
+    @php $preselectedShopId = request('shop_id'); @endphp
     <div class="max-w-lg mx-auto mt-10">
         <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
             <!-- Header -->
@@ -38,10 +39,12 @@
 
                 <!-- Entité à certifier -->
                 <label class="block text-sm font-medium text-gray-700 mb-1">Sélectionner l'entité à certifier</label>
-                <select name="entity" class="w-full border border-gray-300 rounded-xl px-4 py-3 mb-6 focus:outline-none focus:ring-2 focus:ring-orange-500">
-                    <option value="" disabled selected>Choisir une boutique</option>
+                <select name="entity" required class="w-full border border-gray-300 rounded-xl px-4 py-3 mb-6 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                    <option value="" disabled {{ !$preselectedShopId ? 'selected' : '' }}>Choisir une boutique</option>
                     @foreach(auth()->user()->shops as $shop)
-                        <option value="{{ $shop->name }}">{{ $shop->name }}</option>
+                        <option value="{{ $shop->name }}" {{ $preselectedShopId == $shop->id ? 'selected' : '' }}>
+                            {{ $shop->name }}
+                        </option>
                     @endforeach
                 </select>
 
@@ -97,13 +100,21 @@
 
                 <!-- Total -->
                 <div class="bg-gray-50 rounded-xl p-4 mb-6">
-                    <div class="flex justify-between items-center">
+                    <div class="flex justify-between text-sm mb-2">
+                        <span class="text-gray-500">Prix de la certification</span>
+                        <span class="font-medium" id="basePriceDisplay">5 000 FCFA</span>
+                    </div>
+                    <div class="flex justify-between text-sm mb-2">
+                        <span class="text-gray-500">Frais de paiement (3.03%)</span>
+                        <span class="font-medium text-red-500" id="feeDisplay">152 FCFA</span>
+                    </div>
+                    <div class="flex justify-between items-center border-t pt-2">
                         <div>
                             <span class="text-sm font-medium text-gray-800">Total</span>
                             <span class="text-xs text-gray-500 block" id="planNameDisplay">Vendeur de Confiance</span>
                         </div>
                         <div class="text-right">
-                            <span class="text-2xl font-bold text-gray-900" id="priceDisplay">5 000</span>
+                            <span class="text-2xl font-bold text-gray-900" id="totalDisplay">5 152</span>
                             <span class="text-sm font-bold text-gray-900"> FCFA</span>
                             <span class="text-xs text-gray-400 block">/an</span>
                         </div>
@@ -122,14 +133,22 @@
     </div>
 
     <script>
-        // Mise à jour du résumé du prix
+        const fees = @json(array_map(fn($p) => (int) round($p['price'] * 0.03046), $plans));
+
         document.querySelectorAll('input[name="plan"]').forEach(radio => {
             radio.addEventListener('change', function() {
                 const parent = this.closest('label');
                 const name = parent.querySelector('h4').innerText;
-                const price = parent.querySelector('.font-bold').innerText.trim();
+                const priceText = parent.querySelector('.font-bold').innerText.trim();
+                const price = parseInt(priceText.replace(/\s/g, ''));
+                const planKey = this.value;
+                const fee = fees[planKey] || Math.round(price * 0.03046);
+                const total = price + fee;
+
                 document.getElementById('planNameDisplay').innerText = name;
-                document.getElementById('priceDisplay').innerText = price;
+                document.getElementById('basePriceDisplay').innerText = price.toLocaleString() + ' FCFA';
+                document.getElementById('feeDisplay').innerText = fee.toLocaleString() + ' FCFA';
+                document.getElementById('totalDisplay').innerText = total.toLocaleString();
             });
         });
 

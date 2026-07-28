@@ -19,10 +19,17 @@ class CashoutController extends Controller
 
     public function index()
     {
-        $logs = CashoutLog::latest()->paginate(20);
+        $logs = CashoutLog::latest()->paginate(100);
+        $allLogs = CashoutLog::latest()->get();
         $balance = $this->getBalance();
+        $totalEnvois = CashoutLog::whereIn('service_code', ['wave_sn_payout', 'om_sn_payout'])->count();
+        $totalReceptions = CashoutLog::whereIn('service_code', ['wave_sn', 'om_sn', 'sandbox', 'WAVE_SN_CASHOUT', 'OM_SN_CASHOUT'])->count();
 
-        return view('admin.cashout.index', compact('logs', 'balance'));
+        // Pour les onglets
+        $envois = CashoutLog::whereIn('service_code', ['wave_sn_payout', 'om_sn_payout'])->latest()->get();
+        $receptions = CashoutLog::whereIn('service_code', ['wave_sn', 'om_sn', 'sandbox', 'WAVE_SN_CASHOUT', 'OM_SN_CASHOUT', 'FM_SN_CASHOUT', 'WIZALL_SN_CASHOUT'])->latest()->get();
+
+        return view('admin.cashout.index', compact('logs', 'allLogs', 'balance', 'totalEnvois', 'totalReceptions', 'envois', 'receptions'));
     }
 
     public function initiate(Request $request)
@@ -179,11 +186,11 @@ class CashoutController extends Controller
 
         // Fallback : calcul basé sur les logs
         try {
-            $recharges = CashoutLog::whereIn('service_code', ['OM_SN_CASHOUT', 'WAVE_SN_CASHOUT', 'FM_SN_CASHOUT', 'WIZALL_SN_CASHOUT', 'wave_sn', 'orange_money_sn'])
+            $recharges = CashoutLog::whereIn('service_code', ['OM_SN_CASHOUT', 'WAVE_SN_CASHOUT', 'FM_SN_CASHOUT', 'WIZALL_SN_CASHOUT', 'wave_sn', 'om_sn'])
                 ->where('status', 'success')
                 ->sum('amount');
 
-            $retraits = CashoutLog::whereIn('service_code', ['OM_SN_CASHIN', 'WAVE_SN_CASHIN', 'FM_SN_CASHIN', 'WIZALL_SN_CASHIN', 'wave_sn_payout', 'orange_money_sn_payout', 'free_money_sn_payout'])
+            $retraits = CashoutLog::whereIn('service_code', ['OM_SN_CASHIN', 'WAVE_SN_CASHIN', 'FM_SN_CASHIN', 'WIZALL_SN_CASHIN', 'wave_sn_payout', 'om_sn_payout'])
                 ->where('status', 'success')
                 ->sum('amount');
 

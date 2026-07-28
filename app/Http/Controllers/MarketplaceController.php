@@ -23,6 +23,9 @@ class MarketplaceController extends Controller
     public function index()
     {
         $plans = PlanService::$marketplacePlans;
+        foreach ($plans as $key => $plan) {
+            $plans[$key]['fee'] = (int) round($plan['price'] * 0.03046);
+        }
         $user = Auth::user();
 
         $activeSub = MarketplaceSubscription::where('user_id', $user->id)
@@ -60,7 +63,7 @@ class MarketplaceController extends Controller
 
         $amount = PlanService::$marketplacePlans[$planKey]['price'];
 
-        $paymentFee = (int) round($amount * 0.0303);
+        $paymentFee = (int) round($amount * 0.03046);
         $totalAmount = $amount + $paymentFee;
 
         $reference = 'MKT-' . Auth::id() . '-' . $planKey . '-' . time();
@@ -140,6 +143,17 @@ class MarketplaceController extends Controller
     {
         Log::info('Marketplace - Vérification statut', ['externalId' => $externalId]);
 
+        // 🔥 VÉRIFIER SI LE WEBHOOK A DÉJÀ TRAITÉ
+        $alreadyProcessed = MarketplaceSubscription::where('metadata->reference', $externalId)
+            ->where('status', 'active')
+            ->exists();
+
+        if ($alreadyProcessed) {
+            Log::info('Marketplace - Déjà traité, on redirige', ['externalId' => $externalId]);
+            session()->forget(['pending_mkt_plan', 'pending_mkt_amount', 'pending_mkt_total', 'pending_mkt_external_id', 'pending_mkt_entity']);
+            return response()->json(['success' => true, 'status' => 'SUCCESS', 'redirect' => route('marketplace.status')]);
+        }
+
         $session = $this->dexpay->getCheckoutSession($externalId);
 
         if (!$session) {
@@ -172,7 +186,18 @@ class MarketplaceController extends Controller
                     'plan' => $planKey,
                     'status' => 'active',
                     'expires_at' => now()->addMonth(), // ✅ Abonnement MENSUEL
-                    'metadata' => $session,
+                    'metadata' => array_merge($session, ['reference' => $externalId]),
+                ]);
+
+                // Ajouter le log de réception
+                CashoutLog::create([
+                    'shop_id' => $shop->id ?? null,
+                    'service_code' => $session['data']['operator'] ?? 'sandbox',
+                    'phone'        => $user->phone ?? 'N/A',
+                    'amount'       => session('pending_mkt_total') ?? PlanService::$marketplacePlans[$planKey]['price'],
+                    'external_id'  => $externalId,
+                    'status'       => 'success',
+                    'response'     => json_encode($session),
                 ]);
 
                 Log::info('Marketplace - Abonnement activé via checkStatus', ['user_id' => $userId, 'plan' => $planKey]);
@@ -213,6 +238,17 @@ class MarketplaceController extends Controller
         Log::info('WEBHOOK ARRIVÉ ! Marketplace', ['headers' => $request->headers->all(), 'externalId' => $externalId]);
         Log::info('Marketplace Webhook reçu', $request->all());
 
+        // 🔥 VÉRIFIER SI CHECKSTATUS A DÉJÀ TRAITÉ
+        $alreadyProcessed = MarketplaceSubscription::where('metadata->reference', $externalId)
+            ->where('status', 'active')
+            ->exists();
+
+        if ($alreadyProcessed) {
+            Log::info('Marketplace - Déjà traité par checkStatus, webhook ignoré', ['externalId' => $externalId]);
+            return response()->json(['success' => true]);
+        }
+
+
         $payload = $request->all();
         $event = $payload['event'] ?? ($payload['data']['status'] ?? null);
 
@@ -234,8 +270,8 @@ class MarketplaceController extends Controller
                         ->where('status', 'active')->first();
 
                     if ($existing) {
-                        Log::info('Marketplace - Webhook ignoré car déjà actif', ['user_id' => $user->id, 'existing_id' => $existing->id]);
-                        return response()->json(['success' => true]);
+                        $existing->update(['status' => 'cancelled']);
+                        Log::info('Marketplace - Ancien abonnement annulé pour upgrade (callback)', ['old_id' => $existing->id]);
                     }
 
                     MarketplaceSubscription::where('user_id', $user->id)
@@ -255,7 +291,17 @@ class MarketplaceController extends Controller
                         'plan' => $planKey,
                         'status' => 'active',
                         'expires_at' => now()->addMonth(), // ✅ Abonnement MENSUEL
-                        'metadata' => $payload,
+                        'metadata' => array_merge($payload, ['reference' => $externalId]),
+                    ]);
+
+                    CashoutLog::create([
+                        'shop_id' => $shop->id ?? null,
+                        'service_code' => $payload['operator'] ?? 'sandbox',
+                        'phone'        => $user->phone ?? 'N/A',
+                        'amount'       => $payload['amount'] ?? PlanService::$marketplacePlans[$planKey]['price'],
+                        'external_id'  => $externalId,
+                        'status'       => 'success',
+                        'response'     => json_encode($payload),
                     ]);
 
                     Log::info('Marketplace - Résultat création', [

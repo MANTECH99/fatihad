@@ -63,7 +63,8 @@
                     </p>
 
                     <div class="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-                        <a href="{{ route('certification.index') }}" class="px-6 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition">
+                        <a href="{{ route('certification.index', ['shop_id' => $activeCert->shop_id]) }}"
+                           class="inline-flex items-center px-6 py-3 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition shadow-sm">
                             <i class="fas fa-sync-alt mr-2"></i> Renouveler / Changer
                         </a>
                     </div>

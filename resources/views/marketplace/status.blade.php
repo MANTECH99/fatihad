@@ -69,8 +69,9 @@
                     </p>
 
                     <div class="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-                        <a href="{{ route('marketplace.index') }}" class="px-6 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition">
-                            <i class="fas fa-sync-alt mr-2"></i> Renouveler
+                        <a href="{{ route('marketplace.index', ['shop_id' => $activeSub->shop_id]) }}"
+                           class="inline-flex items-center px-6 py-3 bg-emerald-500 text-white rounded-xl font-medium hover:bg-emerald-600 transition shadow-sm">
+                            <i class="fas fa-sync-alt mr-2"></i> Renouveler / Changer
                         </a>
                     </div>
                 </div>
@@ -119,6 +120,9 @@
                             <div class="flex items-center justify-between text-sm border-b border-gray-100 pb-2">
                                 <div>
                                     <span class="font-medium text-gray-700">{{ \App\Services\PlanService::$marketplacePlans[$sub->plan]['name'] }}</span>
+                                    <span class="text-gray-400 text-xs ml-2">
+    ({{ $sub->shop ? $sub->shop->name : $sub->entity_name }})
+</span>
                                 </div>
                                 <div class="flex items-center gap-3">
                                     <span class="text-xs text-gray-400">{{ $sub->created_at->format('d/m/Y') }}</span>

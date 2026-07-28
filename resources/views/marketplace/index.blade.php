@@ -3,7 +3,10 @@
 @section('title', 'Accès Marketplace')
 
 @section('content')
-    @php use App\Services\PlanService; @endphp
+    @php
+        use App\Services\PlanService;
+        $preselectedShopId = request('shop_id');
+    @endphp
     <div class="max-w-lg mx-auto mt-10">
         <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
             <div class="flex items-center justify-between mb-6">
@@ -24,10 +27,12 @@
                 @csrf
 
                 <label class="block text-sm font-medium text-gray-700 mb-1">Boutique à certifier</label>
-                <select name="entity" class="w-full border border-gray-300 rounded-xl px-4 py-3 mb-6 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <option value="" disabled selected>Choisir une boutique</option>
+                <select name="entity" required class="w-full border border-gray-300 rounded-xl px-4 py-3 mb-6 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="" disabled {{ !$preselectedShopId ? 'selected' : '' }}>Choisir une boutique</option>
                     @foreach(auth()->user()->shops as $shop)
-                        <option value="{{ $shop->name }}">{{ $shop->name }}</option>
+                        <option value="{{ $shop->name }}" {{ $preselectedShopId == $shop->id ? 'selected' : '' }}>
+                            {{ $shop->name }}
+                        </option>
                     @endforeach
                 </select>
 
@@ -58,12 +63,20 @@
                     @endforeach
                 </div>
 
-                {{-- ✅ AFFICHAGE DYNAMIQUE DU PRIX --}}
-                <div class="flex justify-center mb-6">
-                    <span class="bg-indigo-50 text-indigo-700 font-bold px-6 py-3 rounded-full text-lg" id="priceDisplay">
-                        {{ number_format(PlanService::$marketplacePlans[array_key_first(PlanService::$marketplacePlans)]['price'], 0, ',', ' ') }} FCFA
-                        <span class="text-sm font-normal text-indigo-500">/ mois</span>
-                    </span>
+                <!-- Total -->
+                <div class="bg-gray-50 rounded-xl p-4 mb-6">
+                    <div class="flex justify-between text-sm mb-2">
+                        <span class="text-gray-500">Prix de l'abonnement</span>
+                        <span class="font-medium" id="basePriceDisplay">{{ number_format(PlanService::$marketplacePlans[array_key_first(PlanService::$marketplacePlans)]['price'], 0, ',', ' ') }} FCFA</span>
+                    </div>
+                    <div class="flex justify-between text-sm mb-2">
+                        <span class="text-gray-500">Frais de paiement (3.03%)</span>
+                        <span class="font-medium text-red-500" id="feeDisplay">{{ number_format((int) round(PlanService::$marketplacePlans[array_key_first(PlanService::$marketplacePlans)]['price'] * 0.0303), 0, ',', ' ') }} FCFA</span>
+                    </div>
+                    <div class="flex justify-between items-center border-t pt-2">
+                        <span class="text-sm font-medium text-gray-800">Total</span>
+                        <span class="text-xl font-bold text-gray-900" id="totalDisplay">{{ number_format(PlanService::$marketplacePlans[array_key_first(PlanService::$marketplacePlans)]['price'] + (int) round(PlanService::$marketplacePlans[array_key_first(PlanService::$marketplacePlans)]['price'] * 0.0303), 0, ',', ' ') }} FCFA</span>
+                    </div>
                 </div>
 
                 <input type="hidden" name="plan" id="selectedPlan" value="{{ array_key_first(PlanService::$marketplacePlans) }}">
@@ -107,12 +120,19 @@
 
     {{-- ✅ JAVASCRIPT POUR METTRE À JOUR LE PRIX ET LE PLAN --}}
     <script>
+        const fees = @json(array_map(fn($p) => (int) round($p['price'] * 0.03046), PlanService::$marketplacePlans));
+
         document.querySelectorAll('input[name="plan"]').forEach(radio => {
             radio.addEventListener('change', function() {
-                const price = this.dataset.price;
+                const price = parseInt(this.dataset.price);
                 const name = this.dataset.name;
-                document.getElementById('priceDisplay').innerHTML =
-                    parseInt(price).toLocaleString('fr-FR') + ' FCFA <span class="text-sm font-normal text-indigo-500">/ mois</span>';
+                const planKey = this.value;
+                const fee = fees[planKey] || Math.round(price * 0.03046);
+                const total = price + fee;
+
+                document.getElementById('basePriceDisplay').innerText = price.toLocaleString('fr-FR') + ' FCFA';
+                document.getElementById('feeDisplay').innerText = fee.toLocaleString('fr-FR') + ' FCFA';
+                document.getElementById('totalDisplay').innerText = total.toLocaleString('fr-FR') + ' FCFA';
                 document.getElementById('selectedPlan').value = this.value;
             });
         });

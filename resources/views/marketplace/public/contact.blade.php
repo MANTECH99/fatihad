@@ -76,7 +76,7 @@
                     <h3 class="font-bold text-gray-900 mb-2 flex items-center gap-2">
                         <i class="fas fa-question-circle text-emerald-500"></i> Est-ce gratuit de vendre ?
                     </h3>
-                    <p class="text-sm text-gray-500">L'inscription est gratuite. Nous prélevons une petite commission uniquement sur les ventes réalisées.</p>
+                    <p class="text-sm text-gray-500">L'inscription est gratuite. Nous prélevons aucune commission  sur les ventes réalisées.</p>
                 </div>
 
                 <div class="bg-white rounded-xl p-6 shadow-sm">
