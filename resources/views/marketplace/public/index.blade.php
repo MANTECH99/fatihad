@@ -189,7 +189,7 @@
             @if($marketplaceProducts->isNotEmpty())
                 <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
                     @foreach($marketplaceProducts as $product)
-                        <a href="{{ route('storefront.product', ['shop' => $product->shop->slug, 'product' => $product->id]) }}" class="bg-white rounded-lg shadow-sm hover:shadow-md transition block border border-gray-200">
+                        <a href="{{ route('storefront.product', ['shop' => $product->shop->slug, 'product' => $product->slug]) }}" class="bg-white rounded-lg shadow-sm hover:shadow-md transition block border border-gray-200">
                             <div class="relative w-full h-40 bg-white rounded-t-lg overflow-hidden flex items-center justify-center p-2">
                                 @if($product->image_url)
                                     <img src="{{ $product->image_url }}" alt="{{ $product->name }}" style="max-width:100%;max-height:100%;object-fit:contain;" loading="lazy">
@@ -384,7 +384,7 @@
             @if($marketplaceProducts->isNotEmpty())
                 <div class="grid grid-cols-2 gap-3">
                     @foreach($marketplaceProducts as $product)
-                        <a href="{{ route('storefront.product', ['shop' => $product->shop->slug, 'product' => $product->id]) }}" class="bg-white rounded-lg shadow-sm hover:shadow-md transition block border border-gray-200">
+                        <a href="{{ route('storefront.product', ['shop' => $product->shop->slug, 'product' => $product->slug]) }}" class="bg-white rounded-lg shadow-sm hover:shadow-md transition block border border-gray-200">
                             <div class="relative w-full h-40 bg-white rounded-t-lg overflow-hidden flex items-center justify-center p-2">
                                 @if($product->image_url)
                                     <img src="{{ $product->image_url }}" alt="{{ $product->name }}" style="max-width:100%;max-height:100%;object-fit:contain;" loading="lazy">

@@ -24,7 +24,7 @@ class FacebookCatalogController extends Controller
             $item->addChild('g:id', $product->id);
             $item->addChild('g:title', htmlspecialchars($product->name));
             $item->addChild('g:description', htmlspecialchars($product->description ?? ''));
-            $item->addChild('g:link', route('storefront.product', ['shop' => $shop->slug, 'product' => $product]));
+            $item->addChild('g:link', route('storefront.product', ['shop' => $shop->slug, 'product' => $product->slug]));
             $item->addChild('g:image_link', $product->image_url ?? 'https://placehold.co/800x800?text=Produit');
             $item->addChild('g:price', number_format($product->current_price, 0, '.', '') . ' XOF');
             $item->addChild('g:availability', $product->is_available && (!$product->track_inventory || $product->stock > 0) ? 'in stock' : 'out of stock');

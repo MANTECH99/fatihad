@@ -503,4 +503,32 @@ class FacebookAdsService
 
         return $campaign;
     }
+
+
+
+    /**
+     * Envoyer un événement via l'API Conversions (CAPI)
+     */
+    public function sendConversionEvent($eventName, $userData, $customData, $shop)
+    {
+        if (!$shop->facebook_pixel_id) return;
+
+        $payload = [
+            'data' => [[
+                'event_name' => $eventName,
+                'event_time' => now()->timestamp,
+                'action_source' => 'website',
+                'event_source_url' => request()->fullUrl(),
+                'user_data' => $userData,
+                'custom_data' => $customData,
+            ]],
+            'access_token' => $shop->facebook_capi_token ?: env('FACEBOOK_CAPI_TOKEN', $this->accessToken),
+        ];
+
+        try {
+            Http::post("https://graph.facebook.com/v18.0/{$shop->facebook_pixel_id}/events", $payload);
+        } catch (\Exception $e) {
+            \Log::error('CAPI error: ' . $e->getMessage());
+        }
+    }
 }

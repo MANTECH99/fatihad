@@ -118,7 +118,7 @@
                 @if($products->isNotEmpty())
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         @foreach($products as $product)
-                            <a href="{{ route('storefront.product', ['shop' => $product->shop->slug, 'product' => $product->id]) }}"
+                            <a href="{{ route('storefront.product', ['shop' => $product->shop->slug, 'product' => $product->slug]) }}"
                                class="bg-white rounded-lg shadow-sm hover:shadow-md transition block group border border-gray-200">
                                 <div class="relative w-full h-48 bg-white rounded-t-lg overflow-hidden flex items-center justify-center p-3">
                                     @if($product->image_url)

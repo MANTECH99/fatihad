@@ -172,6 +172,22 @@
                         </a>
                     </p>
                 </div>
+
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        🔑 Token API Conversions (CAPI)
+                    </label>
+                    <input type="text" name="facebook_capi_token"
+                           value="{{ old('facebook_capi_token', $shop->facebook_capi_token) }}"
+                           class="w-full border-gray-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"
+                           placeholder="Token optionnel pour l'API Conversions">
+                    <p class="text-xs text-gray-500 mt-1">
+                        Améliore la fiabilité du suivi des conversions.
+                        <a href="https://www.facebook.com/business/help/1675099549621372" target="_blank" class="text-emerald-600 underline">
+                            Obtenir un token
+                        </a>
+                    </p>
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Frais par défaut (FCFA)</label>

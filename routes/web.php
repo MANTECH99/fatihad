@@ -84,7 +84,7 @@ Route::get('/shop/{shop:slug}', [StorefrontController::class, 'show'])->name('st
 Route::get('/shop/{shop:slug}/checkout', [StorefrontController::class, 'checkout'])->name('storefront.checkout');
 Route::post('/shop/{shop:slug}/order', [StorefrontController::class, 'placeOrder'])->name('storefront.order');
 Route::get('/shop/{shop:slug}/order/{order:order_number}/confirmation', [StorefrontController::class, 'orderConfirmation'])->name('storefront.order.confirmation');
-Route::get('/shop/{shop:slug}/product/{product}', [StorefrontController::class, 'product'])->name('storefront.product');
+Route::get('/shop/{shop:slug}/product/{product:slug}', [StorefrontController::class, 'product'])->name('storefront.product');
 
 
 

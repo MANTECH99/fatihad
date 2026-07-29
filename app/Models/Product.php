@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Product extends Model
 {
@@ -14,6 +15,7 @@ class Product extends Model
         'shop_id',
         'category_id',
         'name',
+        'slug', // ← AJOUTER
         'description',
         'price',
         'sale_price',
@@ -86,5 +88,29 @@ class Product extends Model
     public function reviews()
     {
         return $this->hasMany(Review::class);
+    }
+
+    // Ajouter cette méthode boot
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($product) {
+            if (empty($product->slug)) {
+                $product->slug = Str::slug($product->name);
+            }
+        });
+
+        static::updating(function ($product) {
+            if ($product->isDirty('name') && empty($product->slug)) {
+                $product->slug = Str::slug($product->name);
+            }
+        });
+    }
+
+// Remplacer getRouteKeyName()
+    public function getRouteKeyName()
+    {
+        return 'slug';
     }
 }

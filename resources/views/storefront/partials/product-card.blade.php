@@ -1,7 +1,7 @@
 {{-- resources/views/storefront/partials/product-card.blade.php --}}
 @props(['product', 'shop'])
 
-<a href="{{ route('storefront.product', ['shop' => $shop->slug, 'product' => $product->id]) }}" class="bg-white rounded-lg shadow-sm hover:shadow-md transition block border border-gray-200">
+<a href="{{ route('storefront.product', ['shop' => $shop->slug, 'product' => $product->slug]) }}" class="bg-white rounded-lg shadow-sm hover:shadow-md transition block border border-gray-200">
 
     <div class="relative w-full h-40 bg-white rounded-t-lg overflow-hidden flex items-center justify-center p-2">
         @if($product->image_url)

@@ -23,6 +23,17 @@
 
         <h1 class="text-2xl font-bold text-gray-900 mb-6">Votre commande</h1>
 
+        @if(count($cartItems) == 0)
+            <div class="bg-white rounded-lg shadow mb-6 p-8 text-center">
+                <i class="fas fa-shopping-cart text-6xl text-gray-300 mb-4"></i>
+                <h2 class="text-xl font-bold text-gray-700 mb-2">Votre panier est vide</h2>
+                <p class="text-gray-500 mb-4">Ajoutez des produits pour commencer votre commande.</p>
+                <a href="{{ route('storefront.show', $shop->slug) }}" class="inline-block bg-emerald-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-emerald-600 transition">
+                    <i class="fas fa-store mr-2"></i> Voir la boutique
+                </a>
+            </div>
+        @endif
+
         @if(session('error'))
             <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
                 @if(is_array(session('error')))
@@ -48,37 +59,63 @@
 
                 <div class="divide-y">
                     @foreach($cartItems as $item)
-                        <div class="px-4 py-3 flex items-center justify-between">
-                            <div class="flex-1">
-                                <div class="flex items-center">
-                    <span class="bg-emerald-100 text-emerald-800 text-xs font-medium px-2 py-1 rounded mr-2">
-                        {{ $item->cart_quantity }}x
-                    </span>
-                                    <span class="font-medium">{{ $item->name }}</span>
-                                </div>
-                                @if($item->cart_options)
-                                    <p class="text-sm text-gray-500 mt-1">
-                                        @foreach($item->cart_options as $key => $value)
-                                            {{ $key }}: {{ $value }}@if(!$loop->last), @endif
-                                        @endforeach
-                                    </p>
+                        <div class="px-4 py-3">
+                            <div class="flex space-x-4">
+                                <!-- Image produit -->
+                                @if($item->image_url)
+                                    <img src="{{ $item->image_url }}" alt="{{ $item->name }}"
+                                         class="w-20 h-20 object-contain rounded-lg flex-shrink-0 bg-gray-50">
                                 @endif
-                                <span class="text-sm text-gray-500">
-                    {{ number_format($item->current_price, 0, ',', ' ') }} FCFA / unité
-                </span>
-                            </div>
-                            <div class="flex items-center gap-3">
-                <span class="font-medium">
-                    {{ number_format($item->current_price * $item->cart_quantity, 0, ',', ' ') }} FCFA
-                </span>
-                                <button type="button" onclick="removeItem('{{ $item->cart_key }}')" class="text-red-500 hover:text-red-700">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+
+                                <!-- Infos produit -->
+                                <div class="flex-1">
+                                    <span class="font-medium text-sm">{{ $item->name }}</span>
+
+                                    @if($item->cart_options)
+                                        <p class="text-xs text-gray-500 mt-1">
+                                            @foreach($item->cart_options as $key => $value)
+                                                {{ $key }}: {{ $value }}@if(!$loop->last), @endif
+                                            @endforeach
+                                        </p>
+                                    @endif
+
+                                    <div class="mt-2 text-sm">
+                            <span class="font-bold text-emerald-600">
+                                {{ number_format($item->current_price * $item->cart_quantity, 0, ',', ' ') }} FCFA
+                            </span>
+                                        @if($item->cart_quantity > 1)
+                                            <span class="text-gray-400 text-xs ml-2">
+                                    ({{ number_format($item->current_price, 0, ',', ' ') }} FCFA/unité)
+                                </span>
+                                        @endif
+                                    </div>
+
+                                    <!-- Quantité + Supprimer -->
+                                    <div class="flex items-center justify-between mt-3">
+                                        <div class="inline-flex items-center border-2 border-gray-300 rounded-lg" data-cart-key="{{ $item->cart_key }}">
+                                            <button type="button"
+                                                    onclick="updateQuantity('{{ $item->cart_key }}', {{ $item->cart_quantity - 1 }})"
+                                                    class="minus-btn w-8 h-8 flex items-center justify-center text-gray-600 hover:text-emerald-500 rounded-l-lg">
+                                                -
+                                            </button>
+                                            <span class="quantity-display px-3 text-center text-sm font-medium border-x-2 border-gray-300 py-1">{{ $item->cart_quantity }}</span>
+                                            <button type="button"
+                                                    onclick="updateQuantity('{{ $item->cart_key }}', {{ $item->cart_quantity + 1 }})"
+                                                    class="plus-btn w-8 h-8 flex items-center justify-center text-emerald-500 hover:text-emerald-600 rounded-r-lg">
+                                                +
+                                            </button>
+                                        </div>
+
+                                        <button type="button" onclick="removeItem('{{ $item->cart_key }}')"
+                                                class="text-gray-400 hover:text-red-500">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     @endforeach
                 </div>
-
             </div>
             {{-- Zone de livraison --}}
             @if(!empty($shop->delivery_zones))
@@ -371,6 +408,47 @@
                 zoneSelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         });
+
+        async function updateQuantity(key, quantity) {
+            if (quantity <= 0) {
+                removeItem(key);
+                return;
+            }
+
+            // Trouver le conteneur de quantité correspondant
+            const container = document.querySelector(`[data-cart-key="${key}"]`);
+            const displaySpan = container.querySelector('.quantity-display');
+            const minusBtn = container.querySelector('.minus-btn');
+            const plusBtn = container.querySelector('.plus-btn');
+
+            // Désactiver les boutons et afficher le loader
+            minusBtn.disabled = true;
+            plusBtn.disabled = true;
+            displaySpan.innerHTML = '<i class="fas fa-spinner fa-spin text-emerald-500"></i>';
+
+            const resp = await fetch('{{ route("cart.update", $shop->slug) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    items: [{ key: key, quantity: quantity }]
+                })
+            });
+
+            const data = await resp.json();
+
+            if (data.success) {
+                location.reload();
+            } else {
+                // Réactiver si erreur
+                minusBtn.disabled = false;
+                plusBtn.disabled = false;
+                displaySpan.textContent = quantity;
+            }
+        }
     </script>
     {{--
     <script>

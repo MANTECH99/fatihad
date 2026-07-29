@@ -43,6 +43,7 @@ class Shop extends Model
         'facebook_catalog_id',
         'facebook_pixel_id',  // ← AJOUTER
         'facebook_product_set_id',
+        'facebook_capi_token',
     ];
 
     protected $casts = [

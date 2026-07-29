@@ -12,7 +12,8 @@
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            background: #f3f4f6;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
         }
         .product-gallery .swiper-wrapper,
         .product-gallery-desktop .swiper-wrapper {
@@ -183,44 +184,58 @@
         @endif
 
         <div class="mt-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Selectionnez une quantité</label>
-            <div class="flex items-center space-x-3">
-                <button @click="if(quantity > 1) quantity--" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">-</button>
-                <span class="text-lg font-medium w-8 text-center" x-text="quantity">1</span>
-                <button @click="if(quantity < 99) quantity++" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">+</button>
+            <label class="block text-base font-medium text-gray-700 mb-2">Selectionnez une quantité</label>
+            <div class="flex items-center gap-3">
+                <div class="inline-flex items-center border-2 border-gray-300 rounded-lg">
+                    <button @click="if(quantity > 1) quantity--" class="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-emerald-500 rounded-l-lg">-</button>
+                    <span class="text-lg font-medium w-8 text-center border-x-2 border-gray-300 py-1" x-text="quantity">1</span>
+                    <button @click="if(quantity < 99) quantity++" class="w-8 h-8 flex items-center justify-center text-emerald-500 hover:text-emerald-600 rounded-r-lg">+</button>
+                </div>
+
+                @if($product->track_inventory && $product->stock > 0 || !$product->track_inventory)
+                    <button @click="buyNow()" class="flex-1 border-2 border-emerald-500 text-emerald-600 py-2 rounded-xl font-bold">
+                        <i class="fas fa-bolt mr-2"></i> Commander maintenant
+                    </button>
+                @else
+                    <button disabled class="flex-1 bg-gray-300 text-gray-500 py-2 rounded-xl font-bold cursor-not-allowed">
+                        ❌ Rupture de stock
+                    </button>
+                @endif
             </div>
         </div>
 
-        {{-- Notes des avis --}}
-        <div class="mt-4 flex items-center space-x-2">
-            <div class="flex text-yellow-400">
-                @php
-                    $avgRating = $product->reviews()->where('is_approved', true)->avg('rating') ?? 0;
-                    $reviewCount = $product->reviews()->where('is_approved', true)->count();
-                @endphp
-                @for($i = 1; $i <= 5; $i++)
-                    @if($i <= round($avgRating))
-                        ★
-                    @else
-                        ☆
-                    @endif
-                @endfor
+        {{-- Notes des avis et Stock sur la même ligne --}}
+        <div class="mt-4 flex items-center justify-between">
+            <div>
+                @if($product->track_inventory && $product->stock > 0)
+                    <span class="text-green-600 text-sm">✅ En stock ({{ $product->stock }} disponibles)</span>
+                @elseif(!$product->track_inventory)
+                    <span class="text-green-600 text-sm">✅ En stock</span>
+                @else
+                    <span class="text-red-600 text-sm">❌ Rupture de stock</span>
+                @endif
             </div>
-            <span class="text-sm text-gray-600">({{ $reviewCount }} avis)</span>
+
+            <div class="flex items-center space-x-2">
+                <div class="flex text-yellow-400">
+                    @php
+                        $avgRating = $product->reviews()->where('is_approved', true)->avg('rating') ?? 0;
+                        $reviewCount = $product->reviews()->where('is_approved', true)->count();
+                    @endphp
+                    @for($i = 1; $i <= 5; $i++)
+                        @if($i <= round($avgRating))
+                            ★
+                        @else
+                            ☆
+                        @endif
+                    @endfor
+                </div>
+                <span class="text-sm text-gray-600">({{ $reviewCount }} avis)</span>
+            </div>
         </div>
 
-        {{-- Stock --}}
-        <div class="mt-2">
-            @if($product->track_inventory && $product->stock > 0)
-                <span class="text-green-600 text-sm">✅ En stock ({{ $product->stock }} disponibles)</span>
-            @elseif(!$product->track_inventory)
-                <span class="text-green-600 text-sm">✅ En stock</span>
-            @else
-                <span class="text-red-600 text-sm">❌ Rupture de stock</span>
-            @endif
-        </div>
-
-        <div class="mt-6 space-y-3">
+        {{-- Bouton Ajouter au panier --}}
+        <div class="mt-3">
             @if($product->track_inventory && $product->stock <= 0)
                 <button disabled class="w-full bg-gray-300 text-gray-500 py-3 rounded-xl font-bold cursor-not-allowed">
                     ❌ Rupture de stock
@@ -229,10 +244,28 @@
                 <button @click="addToCart()" id="addToCartBtn" class="w-full bg-emerald-500 text-white py-3 rounded-xl font-bold">
                     <i class="fas fa-cart-plus mr-2"></i> Ajouter au panier - <span x-text="formatPrice(totalPrice())"></span>
                 </button>
-                <button @click="buyNow()" class="w-full border-2 border-emerald-500 text-emerald-600 py-3 rounded-xl font-bold">
-                    <i class="fas fa-bolt mr-2"></i> Commander maintenant
-                </button>
             @endif
+        </div>
+
+        {{-- Garanties --}}
+        <div class="mt-6 border-t pt-4">
+            <div class="grid grid-cols-3 gap-3">
+                <div class="text-center">
+                    <i class="fas fa-truck text-2xl text-emerald-500 mb-2"></i>
+                    <p class="text-xs font-medium text-gray-800">Livraison rapide</p>
+                    <p class="text-xs text-gray-500">Livraison rapide suivie</p>
+                </div>
+                <div class="text-center">
+                    <i class="fas fa-undo text-2xl text-emerald-500 mb-2"></i>
+                    <p class="text-xs font-medium text-gray-800">Retours faciles</p>
+                    <p class="text-xs text-gray-500">Politique de retour sous 30 jours</p>
+                </div>
+                <div class="text-center">
+                    <i class="fas fa-lock text-2xl text-emerald-500 mb-2"></i>
+                    <p class="text-xs font-medium text-gray-800">Paiement sécurisé</p>
+                    <p class="text-xs text-gray-500">Paiement chiffré et sécurisé</p>
+                </div>
+            </div>
         </div>
 
         {{-- Aide et Partage Desktop --}}
@@ -240,9 +273,9 @@
 
             <!-- Promotions -->
             <div>
-                <h3 class="font-bold text-md mb-2">🎁 Promotions</h3>
+                <h3 class="font-bold text-md mb-2">🎁 Recommandations</h3>
                 <p class="text-sm text-gray-600">
-                    Prépayez avec Orange Money ou Wave dès 10 000 FCFA et bénéficiez de la livraison gratuite, en point relais, jusqu'à 5 000 FCFA offerts.
+                    Payez avec Orange Money ou Wave avant 14h et recevez votre commande en 24-48h. Livraison offerte en point relais ! Simple et économique !
                 </p>
             </div>
 
@@ -261,19 +294,19 @@
             <div>
                 <h3 class="font-bold text-sm mb-2">📤 Partagez ce produit</h3>
                 <div class="flex items-center space-x-3">
-                    <a href="https://wa.me/?text={{ urlencode($product->name . ' - ' . route('storefront.product', ['shop' => $shop->slug, 'product' => $product->id])) }}"
+                    <a href="https://wa.me/?text={{ urlencode($product->name . ' - ' . route('storefront.product', ['shop' => $shop->slug, 'product' => $product->slug])) }}"
                        target="_blank"
                        class="w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center hover:bg-green-600 transition">
                         <i class="fab fa-whatsapp text-lg"></i>
                     </a>
-                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(route('storefront.product', ['shop' => $shop->slug, 'product' => $product->id])) }}"
+                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(route('storefront.product', ['shop' => $shop->slug, 'product' => $product->slug])) }}"
                        target="_blank"
                        class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition">
                         <i class="fab fa-facebook-f text-lg"></i>
                     </a>
 
                     <!-- Twitter / X -->
-                    <a href="https://twitter.com/intent/tweet?text={{ urlencode(route('storefront.product', ['shop' => $shop->slug, 'product' => $product->id])) }}"
+                    <a href="https://twitter.com/intent/tweet?text={{ urlencode(route('storefront.product', ['shop' => $shop->slug, 'product' => $product->slug])) }}"
                        target="_blank"
                        class="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center hover:bg-gray-800 transition">
                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -425,33 +458,35 @@
                         @endif
                     </div>
 
-                    {{-- Notes des avis --}}
-                    <div class="mt-4 flex items-center space-x-2">
-                        <div class="flex text-yellow-400">
-                            @php
-                                $avgRating = $product->reviews()->where('is_approved', true)->avg('rating') ?? 0;
-                                $reviewCount = $product->reviews()->where('is_approved', true)->count();
-                            @endphp
-                            @for($i = 1; $i <= 5; $i++)
-                                @if($i <= round($avgRating))
-                                    ★
-                                @else
-                                    ☆
-                                @endif
-                            @endfor
-                        </div>
-                        <span class="text-sm text-gray-600">({{ $reviewCount }} avis)</span>
-                    </div>
+                    {{-- Notes des avis et Stock alignés --}}
+                    <div class="mt-4 flex items-center justify-between">
 
-                    {{-- Stock --}}
-                    <div class="mt-2">
-                        @if($product->track_inventory && $product->stock > 0)
-                            <span class="text-green-600 text-sm">✅ En stock ({{ $product->stock }} disponibles)</span>
-                        @elseif(!$product->track_inventory)
-                            <span class="text-green-600 text-sm">✅ En stock</span>
-                        @else
-                            <span class="text-red-600 text-sm">❌ Rupture de stock</span>
-                        @endif
+                        <div>
+                            @if($product->track_inventory && $product->stock > 0)
+                                <span class="text-green-600 text-sm">✅ En stock ({{ $product->stock }} disponibles)</span>
+                            @elseif(!$product->track_inventory)
+                                <span class="text-green-600 text-sm">✅ En stock</span>
+                            @else
+                                <span class="text-red-600 text-sm">❌ Rupture de stock</span>
+                            @endif
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <div class="flex text-yellow-400">
+                                @php
+                                    $avgRating = $product->reviews()->where('is_approved', true)->avg('rating') ?? 0;
+                                    $reviewCount = $product->reviews()->where('is_approved', true)->count();
+                                @endphp
+                                @for($i = 1; $i <= 5; $i++)
+                                    @if($i <= round($avgRating))
+                                        ★
+                                    @else
+                                        ☆
+                                    @endif
+                                @endfor
+                            </div>
+                            <span class="text-sm text-gray-600">({{ $reviewCount }} avis)</span>
+                        </div>
+
                     </div>
 
                     {{-- Options Desktop --}}
@@ -477,33 +512,38 @@
                         </div>
                     @endif
 
-                    {{-- Quantité Desktop --}}
+                    {{-- Quantité et Ajouter au panier sur la même ligne --}}
                     <div class="mt-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Quantité</label>
-                        <div class="flex items-center space-x-4">
-                            <button @click="if(quantity > 1) quantity--"
-                                    class="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center text-xl font-bold hover:border-emerald-500 transition">
-                                -
-                            </button>
-                            <span class="text-2xl font-bold w-12 text-center" x-text="quantity">1</span>
-                            <button @click="if(quantity < 99) quantity++"
-                                    class="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xl font-bold hover:bg-emerald-600 transition">
-                                +
-                            </button>
+                        <label class="block text-base font-medium text-gray-700 mb-2">Selectionnez une quantité</label>
+                        <div class="flex items-center gap-3">
+                            <div class="inline-flex items-center border-2 border-gray-300 rounded-lg">
+                                <button @click="if(quantity > 1) quantity--"
+                                        class="w-10 h-10 flex items-center justify-center text-xl font-bold text-gray-600 hover:text-emerald-500 hover:bg-gray-50 transition rounded-l-lg">
+                                    -
+                                </button>
+                                <span class="text-lg font-bold w-12 text-center border-x-2 border-gray-300 py-2" x-text="quantity">1</span>
+                                <button @click="if(quantity < 99) quantity++"
+                                        class="w-10 h-10 flex items-center justify-center text-xl font-bold text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition rounded-r-lg">
+                                    +
+                                </button>
+                            </div>
+
+                            @if($product->track_inventory && $product->stock <= 0)
+                                <button disabled class="flex-1 bg-gray-300 text-gray-500 py-2.5 rounded-lg font-bold cursor-not-allowed">
+                                    ❌ Rupture de stock
+                                </button>
+                            @else
+                                <button @click="addToCart()" id="addToCartBtnDesktop" class="flex-1 bg-emerald-500 text-white py-2.5 rounded-lg font-bold hover:bg-emerald-600 transition flex items-center justify-center space-x-2">
+                                    <i class="fas fa-cart-plus"></i>
+                                    <span>Ajouter au panier - <span x-text="formatPrice(totalPrice())"></span></span>
+                                </button>
+                            @endif
                         </div>
                     </div>
 
-                    {{-- Boutons Desktop --}}
-                    <div class="mt-8 space-y-3">
-                        @if($product->track_inventory && $product->stock <= 0)
-                            <button disabled class="w-full bg-gray-300 text-gray-500 py-4 rounded-lg font-bold text-lg cursor-not-allowed">
-                                ❌ Rupture de stock
-                            </button>
-                        @else
-                            <button @click="addToCart()" id="addToCartBtnDesktop" class="w-full bg-emerald-500 text-white py-4 rounded-lg font-bold text-lg hover:bg-emerald-600 transition flex items-center justify-center space-x-2">
-                                <i class="fas fa-cart-plus"></i>
-                                <span>Ajouter au panier - <span x-text="formatPrice(totalPrice())"></span></span>
-                            </button>
+                    {{-- Bouton Commander maintenant --}}
+                    <div class="mt-4">
+                        @if($product->track_inventory && $product->stock > 0 || !$product->track_inventory)
                             <button @click="buyNow()"
                                     class="w-full border-2 border-emerald-500 text-emerald-600 py-4 rounded-lg font-bold text-lg hover:bg-emerald-50 transition flex items-center justify-center space-x-2">
                                 <i class="fas fa-bolt"></i>
@@ -512,14 +552,34 @@
                         @endif
                     </div>
 
+                    {{-- Garanties --}}
+                    <div class="mt-6 border-t pt-4">
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="text-center">
+                                <i class="fas fa-truck text-2xl text-emerald-500 mb-2"></i>
+                                <p class="text-xs font-medium text-gray-800">Livraison rapide</p>
+                                <p class="text-xs text-gray-500">Livraison rapide suivie</p>
+                            </div>
+                            <div class="text-center">
+                                <i class="fas fa-undo text-2xl text-emerald-500 mb-2"></i>
+                                <p class="text-xs font-medium text-gray-800">Retours faciles</p>
+                                <p class="text-xs text-gray-500">Politique de retour</p>
+                            </div>
+                            <div class="text-center">
+                                <i class="fas fa-lock text-2xl text-emerald-500 mb-2"></i>
+                                <p class="text-xs font-medium text-gray-800">Paiement sécurisé</p>
+                                <p class="text-xs text-gray-500">Paiement chiffré et sécurisé</p>
+                            </div>
+                        </div>
+                    </div>
                     {{-- Aide et Partage Desktop --}}
                     <div class="mt-8 border-t pt-6 space-y-4">
 
                         <!-- Promotions -->
                         <div>
-                            <h3 class="font-bold text-md mb-2">🎁 Promotions</h3>
+                            <h3 class="font-bold text-md mb-2">🎁 Recommandations</h3>
                             <p class="text-sm text-gray-600">
-                                Prépayez avec Orange Money ou Wave dès 10 000 FCFA et bénéficiez de la livraison gratuite, en point relais, jusqu'à 5 000 FCFA offerts.
+                                Payez avec Orange Money ou Wave avant 14h et recevez votre commande en 24-48h. Livraison offerte en point relais ! Simple et économique !
                             </p>
                         </div>
 
@@ -535,30 +595,26 @@
                             </p>
                         </div>
 
-                        <div>
-                            <h3 class="font-bold text-sm mb-2">📤 Partagez ce produit</h3>
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold text-sm">📤 Partagez ce produit</h3>
                             <div class="flex items-center space-x-3">
-                                <a href="https://wa.me/?text={{ urlencode($product->name . ' - ' . route('storefront.product', ['shop' => $shop->slug, 'product' => $product->id])) }}"
+                                <a href="https://wa.me/?text={{ urlencode($product->name . ' - ' . route('storefront.product', ['shop' => $shop->slug, 'product' => $product->slug])) }}"
                                    target="_blank"
                                    class="w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center hover:bg-green-600 transition">
                                     <i class="fab fa-whatsapp text-lg"></i>
                                 </a>
-                                <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(route('storefront.product', ['shop' => $shop->slug, 'product' => $product->id])) }}"
+                                <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(route('storefront.product', ['shop' => $shop->slug, 'product' => $product->slug])) }}"
                                    target="_blank"
                                    class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition">
                                     <i class="fab fa-facebook-f text-lg"></i>
                                 </a>
-
-                                <!-- Twitter / X -->
-                                <a href="https://twitter.com/intent/tweet?text={{ urlencode(route('storefront.product', ['shop' => $shop->slug, 'product' => $product->id])) }}"
+                                <a href="https://twitter.com/intent/tweet?text={{ urlencode(route('storefront.product', ['shop' => $shop->slug, 'product' => $product->slug])) }}"
                                    target="_blank"
                                    class="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center hover:bg-gray-800 transition">
                                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                                         <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                                     </svg>
                                 </a>
-
-                                <!-- Instagram -->
                                 <a href="https://www.instagram.com/"
                                    target="_blank"
                                    class="w-10 h-10 bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 text-white rounded-full flex items-center justify-center hover:from-purple-600 hover:via-pink-600 hover:to-orange-500 transition">
@@ -752,7 +808,18 @@
                     return data;
                 },
                 buyNow() {
-                    window.location.href = '{{ route('storefront.checkout', $shop->slug) }}';
+                    // Vérifier si le produit est déjà dans le panier
+                    fetch(CART_GET_URL)
+                        .then(resp => resp.json())
+                        .then(data => {
+                            const productInCart = data.items && data.items.some(item => item.id == productId);
+
+                            if (!productInCart || data.count == 0) {
+                                document.getElementById('addToCartFirstModal').style.display = 'flex';
+                            } else {
+                                window.location.href = '{{ route('storefront.checkout', $shop->slug) }}';
+                            }
+                        });
                 },
             }
         }
@@ -768,6 +835,20 @@
                 <i class="fas fa-check" style="color:#10b981; font-size:20px;"></i>
             </div>
             <p style="font-weight:600; color:#065f46;">Produit ajouté !</p>
+        </div>
+    </div>
+    <!-- Modal "Ajouter au panier d'abord" -->
+    <div id="addToCartFirstModal" style="display:none; position:fixed; inset:0; z-index:10000; align-items:center; justify-content:center; background:rgba(0,0,0,0.4);">
+        <div style="background:white; border-radius:16px; padding:24px; text-align:center; width:320px; animation:popIn 0.3s ease;">
+            <div style="width:56px; height:56px; background:#fef3c7; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+                <i class="fas fa-cart-plus" style="color:#f59e0b; font-size:24px;"></i>
+            </div>
+            <h3 style="font-weight:700; font-size:18px; color:#1f2937; margin-bottom:8px;">Ajoutez d'abord au panier</h3>
+            <p style="color:#6b7280; font-size:14px; margin-bottom:20px;">Vous devez ajouter ce produit au panier avant de commander.</p>
+            <button onclick="document.getElementById('addToCartFirstModal').style.display='none'"
+                    style="width:100%; background:#10b981; color:white; border:none; padding:12px; border-radius:8px; font-weight:600; cursor:pointer;">
+                J'ai compris
+            </button>
         </div>
     </div>
 @endpush

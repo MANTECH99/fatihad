@@ -68,16 +68,24 @@ class StorefrontController extends Controller
         $cart = Session::get('cart.' . $shop->id, []);
 
         if (empty($cart)) {
-            return redirect()->route('storefront.show', $shop)
-                ->with('error', 'Votre panier est vide.');
+            $cartItems = collect();
+            $subtotal = 0;
+            $total = $shop->delivery_fee;
+            $estimatedPaymentFee = (int) round($total * 0.03046);
+            $deliveryZones = $shop->delivery_zones ?? [];
+            return view('storefront.checkout', compact('shop', 'cartItems', 'subtotal', 'total', 'estimatedPaymentFee', 'deliveryZones'));
         }
 
         $cartItems = $this->getCartItems($shop, $cart);
 
         if ($cartItems->isEmpty()) {
             Session::forget('cart.' . $shop->id);
-            return redirect()->route('storefront.show', $shop)
-                ->with('error', 'Certains produits ne sont plus disponibles.');
+            $cartItems = collect();
+            $subtotal = 0;
+            $total = $shop->delivery_fee;
+            $estimatedPaymentFee = (int) round($total * 0.03046);
+            $deliveryZones = $shop->delivery_zones ?? [];
+            return view('storefront.checkout', compact('shop', 'cartItems', 'subtotal', 'total', 'estimatedPaymentFee', 'deliveryZones'));
         }
 
         $subtotal = $cartItems->sum(function($item) {
@@ -230,6 +238,25 @@ class StorefrontController extends Controller
             // Vider le panier
             Session::forget('cart.' . $shop->id);
 
+            // ➡️ API Conversions - Purchase
+            try {
+                $adsService = new \App\Services\FacebookAdsService(
+                    $shop->facebook_access_token ?? '',
+                    'act_' . ($shop->facebook_ad_account_id ?? ''),
+                    $shop->facebook_page_id ?? ''
+                );
+                $adsService->sendConversionEvent('Purchase',
+                    [
+                        'em' => $order->customer_email ? [hash('sha256', $order->customer_email)] : null,
+                        'ph' => $order->customer_phone ? [hash('sha256', preg_replace('/[^0-9]/', '', $order->customer_phone))] : null,
+                        'client_ip_address' => request()->ip(),
+                        'client_user_agent' => request()->userAgent()
+                    ],
+                    ['value' => $order->total, 'currency' => 'XOF', 'content_ids' => $order->items->pluck('product_id')->map(fn($id)=>(string)$id)->toArray(), 'content_type' => 'product'],
+                    $shop
+                );
+            } catch (\Exception $e) {}
+
 
 
 
@@ -316,6 +343,22 @@ class StorefrontController extends Controller
         }
 
         Session::put('cart.' . $shop->id, $cart);
+
+
+
+// ➡️ AJOUTER ICI
+        try {
+            $adsService = new \App\Services\FacebookAdsService(
+                $shop->facebook_access_token ?? '',
+                'act_' . ($shop->facebook_ad_account_id ?? ''),
+                $shop->facebook_page_id ?? ''
+            );
+            $adsService->sendConversionEvent('AddToCart',
+                ['client_ip_address' => request()->ip(), 'client_user_agent' => request()->userAgent()],
+                ['value' => $product->current_price * $validated['quantity'], 'currency' => 'XOF', 'content_ids' => [(string)$product->id], 'content_type' => 'product'],
+                $shop
+            );
+        } catch (\Exception $e) {}
 
         $cartCount = array_sum(array_column($cart, 'quantity'));
 
@@ -413,6 +456,20 @@ class StorefrontController extends Controller
             $isOwner = auth()->check() && auth()->id() === $shop->user_id;
             return view('storefront.expired', compact('shop', 'isOwner'));
         }
+
+        // API Conversions - ViewContent
+        try {
+            $adsService = new \App\Services\FacebookAdsService(
+                $shop->facebook_access_token ?? '',
+                'act_' . ($shop->facebook_ad_account_id ?? ''),
+                $shop->facebook_page_id ?? ''
+            );
+            $adsService->sendConversionEvent('ViewContent',
+                ['client_ip_address' => request()->ip(), 'client_user_agent' => request()->userAgent()],
+                ['value' => $product->current_price, 'currency' => 'XOF', 'content_ids' => [(string)$product->id], 'content_type' => 'product'],
+                $shop
+            );
+        } catch (\Exception $e) {}
         return view('storefront.product', compact('shop', 'product'));
     }
 

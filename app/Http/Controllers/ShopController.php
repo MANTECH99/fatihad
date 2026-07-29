@@ -54,6 +54,7 @@ class ShopController extends Controller
             'facebook_ad_account_id' => 'nullable|string|max:50',
             'facebook_catalog_id' => 'nullable|string|max:50',
             'facebook_pixel_id' => 'nullable|string|max:50',  // ← AJOUTER
+            'facebook_capi_token' => 'nullable|string|max:255',
         ]);
 
 
@@ -130,6 +131,7 @@ class ShopController extends Controller
             'facebook_ad_account_id' => 'nullable|string|max:50',
             'facebook_catalog_id' => 'nullable|string|max:50',
             'facebook_pixel_id' => 'nullable|string|max:50',  // ← AJOUTER
+            'facebook_capi_token' => 'nullable|string|max:255',
         ]);
 
         $validated['delivery_zones'] = $request->has('delivery_zones')

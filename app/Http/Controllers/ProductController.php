@@ -11,6 +11,7 @@ use App\Services\FacebookService;
 use App\Services\ImageService;
 use App\Services\PlanService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
@@ -99,6 +100,16 @@ class ProductController extends Controller
         }
 
         $product->order = $shop->products()->max('order') + 1;
+
+        $product->slug = Str::slug($validated['name']);
+
+// S'assurer que le slug est unique
+        $originalSlug = $product->slug;
+        $count = 1;
+        while (Product::where('slug', $product->slug)->exists()) {
+            $product->slug = $originalSlug . '-' . $count;
+            $count++;
+        }
         $product->save();
 
 // Dans ProductController@store, remplacer le bloc Facebook par :

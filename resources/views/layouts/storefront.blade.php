@@ -123,7 +123,7 @@
 </header>
 
 {{-- Bouton d'installation PWA --}}
-<div id="pwa-install-banner" class="hidden bg-emerald-500 text-white px-4 py-3 flex items-center justify-between shadow-md">
+<div id="pwa-install-banner" class="hidden bg-emerald-500 text-white max-w-7xl mx-auto px-4 py-3 flex items-center justify-between shadow-md">
     <div class="flex items-center gap-3">
         @if(isset($shop) && $shop->logo_url)
             <img src="{{ $shop->logo_url }}" alt="{{ $shop->name }}" class="w-8 h-8 rounded-full">

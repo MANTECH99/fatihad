@@ -21,7 +21,7 @@ class FacebookService
         $message = $this->buildProductMessage($product, $shop);
         $productUrl = route('storefront.product', [
             'shop' => $shop->slug,
-            'product' => $product
+            'product' => $product->slug
         ]);
 
         if ($product->image_url) {
